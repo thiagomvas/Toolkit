@@ -9,9 +9,9 @@ namespace Toolkit.CLI.Commands
     internal class WeatherCommands : BaseCommand
     {
         private const string ConfigFilePath = "config.json";
-        private const string ApiKeyWebsite = "https://www.weatherapi.com/";
+        private const string ApiKeyWebsite = "https://home.openweathermap.org/users/sign_up";
 
-        public WeatherCommands() : base("weather", "Fetch current weather data for a specified city and state using the WeatherAPI.")
+        public WeatherCommands() : base("weather", "Fetch current weather data for a specified city and optionally state using the OpenWeatherMap API.")
         {
         }
 
@@ -53,18 +53,18 @@ namespace Toolkit.CLI.Commands
                     }
 
                     var location = $"{city}{(state != null ? $",{state}" : "")}{(country != null ? $",{country}" : "")}";
-                    var apiUrl = $"http://api.weatherapi.com/v1/current.json?q={Uri.EscapeDataString(location)}&key={apiKey}";
+                    var apiUrl = $"https://api.openweathermap.org/data/2.5/weather?q={Uri.EscapeDataString(location)}&appid={apiKey}&units=metric";
 
                     using var httpClient = new HttpClient();
                     var response = await httpClient.GetStringAsync(apiUrl);
                     var data = JsonDocument.Parse(response).RootElement;
 
-                    if (data.TryGetProperty("current", out var current) &&
-                        current.TryGetProperty("condition", out var condition) &&
-                        condition.TryGetProperty("text", out var text) &&
-                        current.TryGetProperty("temp_c", out var temp))
+                    if (data.TryGetProperty("weather", out var weatherArray) &&
+                        weatherArray[0].TryGetProperty("description", out var description) &&
+                        data.TryGetProperty("main", out var main) &&
+                        main.TryGetProperty("temp", out var temp))
                     {
-                        var weatherDescription = text.GetString();
+                        var weatherDescription = description.GetString();
                         var temperature = temp.GetDecimal();
 
                         Logger.LogInformation($"Current weather in {city}{(state != null ? $", {state}" : "")}{(country != null ? $", {country}" : "")}: {weatherDescription}");

@@ -1,6 +1,4 @@
 ﻿using System.CommandLine;
-using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace Toolkit.CLI.Commands
 {
@@ -30,13 +28,27 @@ namespace Toolkit.CLI.Commands
 
             private async Task ExecuteAsync(string url)
             {
-                Console.WriteLine($"Sending GET request to {url}...");
-
                 using var httpClient = new HttpClient();
-                var response = await httpClient.GetStringAsync(url);
+                using var cts = new CancellationTokenSource();
 
-                Console.WriteLine("Response received:");
-                Console.WriteLine(response);
+                Logger.LogInformation($"Sending GET request to: {url}");
+                var loadingTask = Utils.DisplayLoadingAnimation(cts.Token);
+
+                try
+                {
+                    var response = await httpClient.GetStringAsync(url);
+                    cts.Cancel();
+                    await loadingTask;
+
+                    Logger.LogInformation("Response received:\n");
+                    Console.WriteLine(response);
+                }
+                catch (Exception ex)
+                {
+                    cts.Cancel();
+                    await loadingTask;
+                    Logger.LogError($"Request failed: {ex.Message}");
+                }
             }
         }
 
@@ -53,14 +65,28 @@ namespace Toolkit.CLI.Commands
 
             private async Task ExecuteAsync(string url, string content)
             {
-                Console.WriteLine($"Sending POST request to {url} with content: {content}");
-
                 using var httpClient = new HttpClient();
-                var response = await httpClient.PostAsync(url, new StringContent(content));
+                using var cts = new CancellationTokenSource();
 
-                var responseBody = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Response received:");
-                Console.WriteLine(responseBody);
+                Logger.LogInformation($"Sending POST request to: {url} with content: {content}");
+                var loadingTask = Utils.DisplayLoadingAnimation(cts.Token);
+
+                try
+                {
+                    var response = await httpClient.PostAsync(url, new StringContent(content));
+                    cts.Cancel();
+                    await loadingTask;
+
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    Logger.LogInformation("Response received:\n");
+                    Console.WriteLine(responseBody);
+                }
+                catch (Exception ex)
+                {
+                    cts.Cancel();
+                    await loadingTask;
+                    Logger.LogError($"Request failed: {ex.Message}");
+                }
             }
         }
 
@@ -77,14 +103,28 @@ namespace Toolkit.CLI.Commands
 
             private async Task ExecuteAsync(string url, string content)
             {
-                Console.WriteLine($"Sending PUT request to {url} with content: {content}");
-
                 using var httpClient = new HttpClient();
-                var response = await httpClient.PutAsync(url, new StringContent(content));
+                using var cts = new CancellationTokenSource();
 
-                var responseBody = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Response received:");
-                Console.WriteLine(responseBody);
+                Logger.LogInformation($"Sending PUT request to: {url} with content: {content}");
+                var loadingTask = Utils.DisplayLoadingAnimation(cts.Token);
+
+                try
+                {
+                    var response = await httpClient.PutAsync(url, new StringContent(content));
+                    cts.Cancel();
+                    await loadingTask;
+
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    Logger.LogInformation("Response received:\n");
+                    Console.WriteLine(responseBody);
+                }
+                catch (Exception ex)
+                {
+                    cts.Cancel();
+                    await loadingTask;
+                    Logger.LogError($"Request failed: {ex.Message}");
+                }
             }
         }
 
@@ -99,14 +139,28 @@ namespace Toolkit.CLI.Commands
 
             private async Task ExecuteAsync(string url)
             {
-                Console.WriteLine($"Sending DELETE request to {url}...");
-
                 using var httpClient = new HttpClient();
-                var response = await httpClient.DeleteAsync(url);
+                using var cts = new CancellationTokenSource();
 
-                var responseBody = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Response received:");
-                Console.WriteLine(responseBody);
+                Logger.LogInformation($"Sending DELETE request to: {url}");
+                var loadingTask = Utils.DisplayLoadingAnimation(cts.Token);
+
+                try
+                {
+                    var response = await httpClient.DeleteAsync(url);
+                    cts.Cancel();
+                    await loadingTask;
+
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    Logger.LogInformation("Response received:\n");
+                    Console.WriteLine(responseBody);
+                }
+                catch (Exception ex)
+                {
+                    cts.Cancel();
+                    await loadingTask;
+                    Logger.LogError($"Request failed: {ex.Message}");
+                }
             }
         }
     }

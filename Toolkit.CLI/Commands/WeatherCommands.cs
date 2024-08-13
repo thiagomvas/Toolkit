@@ -28,7 +28,7 @@ namespace Toolkit.CLI.Commands
             {
                 var cityOption = new Option<string>("--city", "The name of the city to get the weather for.")
                 {
-                    IsRequired = true
+                    IsRequired = false
                 };
                 var stateOption = new Option<string>("--state", "The state or region code (e.g., CA for California).");
                 var countryOption = new Option<string>("--country", "The country code (e.g., US for the United States).");
@@ -44,12 +44,25 @@ namespace Toolkit.CLI.Commands
             {
                 try
                 {
-                    var apiKey = LoadApiKey("weatherapikey");
+                    var config = LoadConfig();
+                    var apiKey = config.ContainsKey("weatherapikey") ? config["weatherapikey"] : null;
+
                     if (string.IsNullOrWhiteSpace(apiKey))
                     {
                         Logger.LogError("API key for weather data is not set. Use 'config set-key' to set it.");
                         Logger.LogInformation($"Obtain an API key from: {ApiKeyWebsite}");
                         return;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(city))
+                    {
+                        city = config.ContainsKey("cachedCity") ? config["cachedCity"] : null;
+
+                        if (string.IsNullOrWhiteSpace(city))
+                        {
+                            Logger.LogError("No city provided and no cached city found.");
+                            return;
+                        }
                     }
 
                     var location = $"{city}{(state != null ? $",{state}" : "")}{(country != null ? $",{country}" : "")}";
@@ -69,6 +82,18 @@ namespace Toolkit.CLI.Commands
 
                         Logger.LogInformation($"Current weather in {city}{(state != null ? $", {state}" : "")}{(country != null ? $", {country}" : "")}: {weatherDescription}");
                         Logger.LogSuccess($"Temperature: {temperature}°C");
+
+                        if(main.TryGetProperty("feels_like", out var feelsLike))
+                            Logger.LogSuccess($"Feels like: {feelsLike.GetDecimal()}°C");
+
+                        if (main.TryGetProperty("temp_max", out var maxTemp) && main.TryGetProperty("temp_min", out var minTemp)&&
+                            maxTemp.GetDecimal() != minTemp.GetDecimal())
+                            Logger.LogSuccess($"Max/Min Temp: {maxTemp.GetDecimal()}°C/{minTemp.GetDecimal()}°C");
+                        else
+                            Logger.LogWarning($"Max/Min temperature data not available.");
+
+                        if (main.TryGetProperty("humidity", out var humidity))
+                            Logger.LogSuccess($"Humidity: {humidity.GetDecimal()}%");
                     }
                     else
                     {
@@ -85,17 +110,21 @@ namespace Toolkit.CLI.Commands
                 }
             }
 
-            private static string LoadApiKey(string keyName)
+            private static Dictionary<string, string> LoadConfig()
             {
                 if (!File.Exists(ConfigFilePath))
                 {
-                    return null;
+                    return new Dictionary<string, string>();
                 }
 
                 var json = File.ReadAllText(ConfigFilePath);
-                var config = JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
-                config.TryGetValue(keyName, out var apiKey);
-                return apiKey;
+                return JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
+            }
+
+            private static void SaveConfig(Dictionary<string, string> config)
+            {
+                var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(ConfigFilePath, json);
             }
         }
 

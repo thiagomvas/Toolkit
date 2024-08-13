@@ -9,7 +9,7 @@ namespace Toolkit.CLI.Commands
     {
         private const string ConfigFilePath = "config.json";
 
-        public ConfigCommands() : base("config", "Manage configuration settings such as API keys.")
+        public ConfigCommands() : base("config", "Manage configuration settings such as API keys and cached city.")
         {
         }
 
@@ -17,6 +17,7 @@ namespace Toolkit.CLI.Commands
         {
             AddCommand(new SetApiKeyCommand());
             AddCommand(new GetApiKeyCommand());
+            AddCommand(new SetCachedCityCommand()); // New command for setting cached city
             root.AddCommand(this);
         }
 
@@ -119,6 +120,35 @@ namespace Toolkit.CLI.Commands
                 catch (Exception ex)
                 {
                     Logger.LogError($"Failed to get API key: {ex.Message}");
+                }
+            }
+        }
+
+        // New command to set the cached city
+        internal class SetCachedCityCommand : Command
+        {
+            public SetCachedCityCommand() : base("set-city", "Set the cached city for weather queries.")
+            {
+                var cityArg = new Argument<string>("city", "The name of the city to cache for weather queries.");
+
+                AddArgument(cityArg);
+
+                this.SetHandler(ExecuteAsync, cityArg);
+            }
+
+            private async Task ExecuteAsync(string city)
+            {
+                try
+                {
+                    var config = LoadConfig();
+                    config["cachedCity"] = city;
+                    SaveConfig(config);
+
+                    Logger.LogSuccess($"Cached city set to '{city}'.");
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"Failed to set cached city: {ex.Message}");
                 }
             }
         }

@@ -54,6 +54,10 @@ namespace Toolkit.CLI.Commands
                     {
                         config["currencyapikey"] = key;
                     }
+                    else if(service.Equals("news", StringComparison.OrdinalIgnoreCase))
+                    {
+                        config["newsapikey"] = key;
+                    }
                     else
                     {
                         Logger.LogError("Unknown service. Use 'weather' or 'currency'.");
@@ -112,9 +116,20 @@ namespace Toolkit.CLI.Commands
                             Logger.LogError($"No API key found for '{service}'.");
                         }
                     }
+                    else if (service.Equals("news", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (config.TryGetValue("newsapikey", out var key))
+                        {
+                            Logger.LogInformation($"API key for '{service}': {key}");
+                        }
+                        else
+                        {
+                            Logger.LogError($"No API key found for '{service}'.");
+                        }
+                    }
                     else
                     {
-                        Logger.LogError("Unknown service. Use 'weather' or 'currency'.");
+                        Logger.LogError("Unknown service. Use 'weather','currency' or 'news'.");
                     }
                 }
                 catch (Exception ex)

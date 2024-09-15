@@ -32,7 +32,7 @@ namespace Toolkit.CLI.Commands
                 using var cts = new CancellationTokenSource();
 
                 Logger.LogInformation($"Sending GET request to: {url}");
-                var loadingTask = Utils.DisplayLoadingAnimation(cts.Token);
+                var loadingTask = Logger.DisplayLoadingAnimation(cts.Token);
 
                 try
                 {
@@ -69,7 +69,7 @@ namespace Toolkit.CLI.Commands
                 using var cts = new CancellationTokenSource();
 
                 Logger.LogInformation($"Sending POST request to: {url} with content: {content}");
-                var loadingTask = Utils.DisplayLoadingAnimation(cts.Token);
+                var loadingTask = Logger.DisplayLoadingAnimation(cts.Token);
 
                 try
                 {
@@ -107,7 +107,7 @@ namespace Toolkit.CLI.Commands
                 using var cts = new CancellationTokenSource();
 
                 Logger.LogInformation($"Sending PUT request to: {url} with content: {content}");
-                var loadingTask = Utils.DisplayLoadingAnimation(cts.Token);
+                var loadingTask = Logger.DisplayLoadingAnimation(cts.Token);
 
                 try
                 {
@@ -143,7 +143,7 @@ namespace Toolkit.CLI.Commands
                 using var cts = new CancellationTokenSource();
 
                 Logger.LogInformation($"Sending DELETE request to: {url}");
-                var loadingTask = Utils.DisplayLoadingAnimation(cts.Token);
+                var loadingTask = Logger.DisplayLoadingAnimation(cts.Token);
 
                 try
                 {

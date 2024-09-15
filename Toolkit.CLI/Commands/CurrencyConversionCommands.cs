@@ -26,24 +26,21 @@ namespace Toolkit.CLI.Commands
         {
             public ConvertCommand() : base("convert", "Convert an amount from one currency to another.")
             {
-                var fromOption = new Option<string>("--from", "The source currency code (e.g., USD).")
+                var fromOption = new Option<string>(["--from", "-f"], "The source currency code (e.g., USD).")
                 {
                     IsRequired = true
                 };
-                var toOption = new Option<string>("--to", "The target currency code (e.g., EUR).")
+                var toOption = new Option<string>(["--to", "-t"], "The target currency code (e.g., EUR).")
                 {
                     IsRequired = true
                 };
-                var amountOption = new Option<decimal>("--amount", "The amount to convert.")
-                {
-                    IsRequired = true
-                };
+                var amountArg = new Argument<decimal>("amount", "The amount to convert.");
 
+                AddArgument(amountArg);
                 AddOption(fromOption);
                 AddOption(toOption);
-                AddOption(amountOption);
 
-                this.SetHandler(ExecuteAsync, fromOption, toOption, amountOption);
+                this.SetHandler(ExecuteAsync, fromOption, toOption, amountArg);
             }
 
             private async Task ExecuteAsync(string from, string to, decimal amount)

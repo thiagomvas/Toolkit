@@ -17,6 +17,10 @@ namespace Toolkit.CLI.Commands
         private string Query = string.Empty;
         private string[] excludedFolders;
         private string[] excludedExtensions;
+        bool searchOnlyKnown;
+        private HashSet<string> knownExtensionsSet;
+        private HashSet<string> excludedExtensionsSet;
+        private HashSet<string> excludedFoldersSet;
 
         public CodeCounterCommand() : base("codecount", "Count lines of code")
         {
@@ -50,14 +54,17 @@ namespace Toolkit.CLI.Commands
                 "A comma-separated list of folders to ignore");
             var excludeExtensionsOption = new Option<string>(["--excluded-extensions", "-ee"],
                 "A comma-separated list of file extensions to ignore");
+            var searchOnlyKnownOption = new Option<bool>(["--search-only-known", "-sok"],
+                "Only search for known file extensions");
 
             this.AddOption(excludeFoldersOption);
             this.AddOption(excludeExtensionsOption);
+            this.AddOption(searchOnlyKnownOption);
 
-            this.SetHandler(Execute, excludeFoldersOption, excludeExtensionsOption);
+            this.SetHandler(Execute, excludeFoldersOption, excludeExtensionsOption, searchOnlyKnownOption);
             root.AddCommand(this);
         }
-        public void Execute(string excludedFoldersOption, string excludedExtensionsOption)
+        public void Execute(string excludedFoldersOption, string excludedExtensionsOption, bool searchOnlyKnownOption)
         {
             if (!string.IsNullOrWhiteSpace(excludedFoldersOption))
                 excludedFolders = excludedFoldersOption.Split(",");
@@ -67,7 +74,12 @@ namespace Toolkit.CLI.Commands
                 excludedExtensions = excludedExtensionsOption.Split(",");
             else excludedExtensions = [];
 
+            searchOnlyKnown = searchOnlyKnownOption;
+
             var executingDirectory = Directory.GetCurrentDirectory();
+            knownExtensionsSet = new HashSet<string>(extensions.Select(e => e.TrimStart('.')));
+            excludedFoldersSet = new HashSet<string>(excludedFolders ?? []);
+            excludedExtensionsSet = new HashSet<string>(excludedExtensions.Select(e => e.TrimStart('.')) ?? []);
             GetAllData(executingDirectory);
             LogSummary();
             //LogLinesPerFile(executingDirectory, false);
@@ -153,13 +165,12 @@ namespace Toolkit.CLI.Commands
 
             try
             {
-                var excludedFoldersSet = new HashSet<string>(excludedFolders ?? []);
-                var excludedExtensionsSet = new HashSet<string>(excludedExtensions.Select(e => e.TrimStart('.')) ?? []);
                 foreach (string f in Directory.GetFiles(directory))
                 {
                     string ext = Path.GetExtension(f).TrimStart('.');
                     if (!excludedExtensionsSet.Contains(ext))
                     {
+                        if (searchOnlyKnown && !knownExtensionsSet.Contains(ext)) continue;
                         found.Add(f);
                     }
                 }
